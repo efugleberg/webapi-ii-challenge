@@ -38,27 +38,25 @@ router.get("/:id", (req, res) => {
     });
 });
 
-// router.get("/:id/comments", (req, res) => {
-//   const { id } = req.params;
-
-//   if (!id) {
-//     res
-//       .status(404)
-//       .json({ errorMessage: "The post with the specified ID does not exist" });
-//   } else {
-//     Posts.findCommentById(id)
-//       .then(comments => {
-//         if (comments && comments.length) {
-//           res.status(200).json(comments);
-//         }
-//       })
-//       .catch(error => {
-//         res
-//           .status(500)
-//           .json({ error: "The comments information could not be retrieved" });
-//       });
-//   }
-// });
+router.get("/:id/comments", (req, res) => {
+  const { id } = req.params;
+  console.log(id);
+  Posts.findCommentById(id)
+    .then(comments => {
+      if (comments.length === 0) {
+        res
+          .status(404)
+          .json({ message: "The post with the specified ID does not exist." });
+        return;
+      }
+      res.json({ comments });
+    })
+    .catch(error => {
+      res
+        .status(500)
+        .json({ error: "The comments information could not be retrieved" });
+    });
+});
 
 router.post("/", (req, res) => {
   const userPost = req.body;
@@ -83,20 +81,25 @@ router.post("/", (req, res) => {
 /// Close but not quite working yet
 router.post("/:id/comments", (req, res) => {
   const { id } = req.params;
-  const { text } = req.body;
+  const { text, post_id } = req.body;
   console.log(id);
   console.log(text);
-  if (!id) {
-    res
-      .status(400)
-      .json({ message: "The post with the specified ID does not exist" });
-  } else if (!text) {
-    res
-      .status(400)
-      .json({ errorMessage: "Please provide text for the comment." });
-  } else {
-    Posts.insertComment(text)
+  console.log(post_id);
+  Posts.findById(id).then(post => {
+    if (post.length === 0) {
+      res
+        .status(404)
+        .json({ message: "The post with the specified ID does not exist" });
+      return;
+    }
+    Posts.insertComment({ text })
       .then(comment => {
+        if (text === "") {
+          res
+            .status(400)
+            .json({ errorMessage: "Please provide text for the comment." });
+          return;
+        }
         res.status(201).json(comment);
       })
       .catch(error => {
@@ -104,7 +107,7 @@ router.post("/:id/comments", (req, res) => {
           error: "There was an error while saving the comment to the database."
         });
       });
-  }
+  });
 });
 
 router.delete("/:id", (req, res) => {
@@ -129,11 +132,9 @@ router.put("/:id", (req, res) => {
   const changes = req.body;
 
   if (!changes.title || !changes.contents) {
-    res
-      .status(400)
-      .json({
-        errorMessage: "Please provide title and contents for the post."
-      });
+    res.status(400).json({
+      errorMessage: "Please provide title and contents for the post."
+    });
   }
   Posts.update(id, changes)
     .then(updated => {
