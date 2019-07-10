@@ -81,10 +81,11 @@ router.post("/", (req, res) => {
 /// Close but not quite working yet
 router.post("/:id/comments", (req, res) => {
   const { id } = req.params;
-  const { text, post_id } = req.body;
+  const Comment = req.body;
+  Comment.post_id = id;
   console.log(id);
-  console.log(text);
-  console.log(post_id);
+//   console.log(text);
+  console.log(Comment);
   Posts.findById(id).then(post => {
     if (post.length === 0) {
       res
@@ -92,9 +93,9 @@ router.post("/:id/comments", (req, res) => {
         .json({ message: "The post with the specified ID does not exist" });
       return;
     }
-    Posts.insertComment({ text })
+    Posts.insertComment(Comment)
       .then(comment => {
-        if (text === "") {
+        if (Comment === "") {
           res
             .status(400)
             .json({ errorMessage: "Please provide text for the comment." });
