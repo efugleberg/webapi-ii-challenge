@@ -11,6 +11,7 @@ module.exports = {
   findPostComments,
   findCommentById,
   insertComment,
+  fetchAllComments
 };
 
 function find() {
@@ -55,4 +56,8 @@ function findCommentById(id) {
 
 function insertComment(comment) {
   return db('comments').insert(comment).then(ids => ({ id: ids[0] }));
+}
+
+function fetchAllComments() {
+  return db('comments')
 }
